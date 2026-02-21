@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Customer Message Sender</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.container {
+  background: white;
+  width: 90%;
+  max-width: 450px;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+h2 { margin-bottom: 15px; }
+
+#message {
+  font-size: 16px;
+  margin: 20px 0;
+  min-height: 60px;
+}
+
+img {
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+button:disabled {
+  background: gray;
+}
+
+.status {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #555;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Customer Pending Message</h2>
+
+  <div id="message">Loading...</div>
+
+  <img src="images/sample.jpg" alt="Attached Image">
+
+  <button id="sendBtn" onclick="sendMessage()">Send & Mark as Sent</button>
+
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+
+const scriptURL = "PASTE_YOUR_WEBAPP_URL_HERE";
+let currentRow = null;
+
+async function loadMessage() {
+
+  document.getElementById("sendBtn").disabled = true;
+  document.getElementById("status").innerText = "";
+
+  try {
+    const response = await fetch(scriptURL);
+    const data = await response.json();
+
+    if (!data.row) {
+      document.getElementById("message").innerText = "No pending messages.";
+      return;
+    }
+
+    currentRow = data.row;
+    document.getElementById("message").innerText = data.message;
+    document.getElementById("sendBtn").disabled = false;
+
+  } catch (error) {
+    document.getElementById("message").innerText = "Error loading message.";
+  }
+}
+
+async function sendMessage() {
+
+  if (!currentRow) return;
+
+  document.getElementById("sendBtn").disabled = true;
+  document.getElementById("status").innerText = "Updating...";
+
+  try {
+    await fetch(scriptURL, {
+      method: "POST",
+      body: JSON.stringify({ row: currentRow })
+    });
+
+    document.getElementById("status").innerText = "Message Sent & Updated!";
+    loadMessage();
+
+  } catch (error) {
+    document.getElementById("status").innerText = "Error updating sheet.";
+  }
+}
+
+loadMessage();
+
+</script>
+
+</body>
+</html>
