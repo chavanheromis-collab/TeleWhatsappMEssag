@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Customer Message Sender</title>
+<title>WhatsApp CRM Sender</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -15,47 +15,35 @@ body {
   height: 100vh;
   margin: 0;
 }
-
 .container {
   background: white;
-  width: 90%;
-  max-width: 450px;
+  width: 95%;
+  max-width: 500px;
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
   text-align: center;
 }
-
 h2 { margin-bottom: 15px; }
-
 #message {
-  font-size: 16px;
-  margin: 20px 0;
+  font-size: 15px;
+  margin: 15px 0;
   min-height: 60px;
 }
-
-img {
-  width: 100%;
-  border-radius: 8px;
-  margin-top: 10px;
-}
-
 button {
   width: 100%;
   padding: 12px;
-  background: #28a745;
-  color: white;
   border: none;
   border-radius: 6px;
-  font-size: 16px;
+  font-size: 15px;
   cursor: pointer;
-  margin-top: 20px;
+  margin-top: 10px;
+  color: white;
 }
-
-button:disabled {
-  background: gray;
-}
-
+.offer { background: #25D366; }
+.calling { background: #007bff; }
+.missed { background: #ff5722; }
+button:disabled { background: gray; }
 .status {
   margin-top: 15px;
   font-size: 14px;
@@ -66,13 +54,13 @@ button:disabled {
 <body>
 
 <div class="container">
-  <h2>Customer Pending Message</h2>
+  <h2>WhatsApp CRM Sender</h2>
 
-  <div id="message">Loading...</div>
+  <div id="message">Loading message...</div>
 
-  <img src="images/sample.jpg" alt="Attached Image">
-
-  <button id="sendBtn" onclick="sendMessage()">Send & Mark as Sent</button>
+  <button class="offer" onclick="sendOffer()">Send Offer + Image</button>
+  <button class="calling" onclick="sendCalling()">We Are Calling You</button>
+  <button class="missed" onclick="sendMissed()">Could Not Connect</button>
 
   <div class="status" id="status"></div>
 </div>
@@ -80,50 +68,108 @@ button:disabled {
 <script>
 
 const scriptURL = "https://script.google.com/macros/s/AKfycbyWk9-Dp72zjaX5syxmaem8rIIyTGy1sX3tSoAldCRDafg4pWZQoO1WV25xRP-F12DY/exec";
-let currentRow = null;
+const imageURL = "https://yourusername.github.io/repository/images/sample.jpg";
 
+// Get customer number from AppSheet
+const params = new URLSearchParams(window.location.search);
+const customerNumber = (params.get("cust") || "").replace(/\D/g, '');
+
+let sheetMessage = "";
+
+// Load message from sheet (Column T)
 async function loadMessage() {
 
-  document.getElementById("sendBtn").disabled = true;
-  document.getElementById("status").innerText = "";
+  if (!customerNumber) {
+    document.getElementById("message").innerText = "Customer number missing from AppSheet.";
+    disableButtons();
+    return;
+  }
 
   try {
     const response = await fetch(scriptURL);
     const data = await response.json();
 
-    if (!data.row) {
-      document.getElementById("message").innerText = "No pending messages.";
+    if (!data.message) {
+      document.getElementById("message").innerText = "No message available.";
+      disableButtons();
       return;
     }
 
-    currentRow = data.row;
-    document.getElementById("message").innerText = data.message;
-    document.getElementById("sendBtn").disabled = false;
+    sheetMessage = data.message;
+    document.getElementById("message").innerText = sheetMessage;
 
   } catch (error) {
     document.getElementById("message").innerText = "Error loading message.";
+    disableButtons();
   }
 }
 
-async function sendMessage() {
+function disableButtons() {
+  document.querySelectorAll("button").forEach(btn => btn.disabled = true);
+}
 
-  if (!currentRow) return;
+function openWhatsApp(messageText) {
 
-  document.getElementById("sendBtn").disabled = true;
-  document.getElementById("status").innerText = "Updating...";
+  if (!customerNumber) {
+    alert("Customer number missing.");
+    return;
+  }
+
+  const encoded = encodeURIComponent(messageText);
+  const url = `https://wa.me/${customerNumber}?text=${encoded}`;
+  window.open(url, "_blank");
+}
+
+async function markSent() {
 
   try {
     await fetch(scriptURL, {
       method: "POST",
-      body: JSON.stringify({ row: currentRow })
+      body: JSON.stringify({ customer: customerNumber })
     });
 
-    document.getElementById("status").innerText = "Message Sent & Updated!";
-    loadMessage();
-
+    document.getElementById("status").innerText = "Status Updated!";
   } catch (error) {
-    document.getElementById("status").innerText = "Error updating sheet.";
+    document.getElementById("status").innerText = "Update failed.";
   }
+}
+
+// 1️⃣ OFFER + IMAGE
+function sendOffer() {
+
+  const fullMessage = `${sheetMessage}\n\n${imageURL}`;
+  openWhatsApp(fullMessage);
+  markSent();
+}
+
+// 2️⃣ CALLING MESSAGE
+function sendCalling() {
+
+  const message = `We are calling you regarding the special offer shared earlier.
+Kindly take our call or let us know a suitable time.
+
+आम्ही पाठवलेल्या विशेष ऑफर संदर्भात संपर्क करत आहोत.
+कृपया योग्य वेळ कळवावी.
+
+Thank you! 😊`;
+
+  openWhatsApp(message);
+  markSent();
+}
+
+// 3️⃣ MISSED CALL MESSAGE
+function sendMissed() {
+
+  const message = `We tried calling you regarding the special offer but couldn’t connect.
+Please share a convenient time to call.
+
+विशेष ऑफर संदर्भात संपर्क साधण्याचा प्रयत्न केला, परंतु संपर्क होऊ शकला नाही.
+कृपया योग्य वेळ कळवावी.
+
+Thank you! 😊`;
+
+  openWhatsApp(message);
+  markSent();
 }
 
 loadMessage();
@@ -131,5 +177,4 @@ loadMessage();
 </script>
 
 </body>
-
 </html>
