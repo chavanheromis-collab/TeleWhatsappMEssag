@@ -27,9 +27,7 @@ box-shadow:0 10px 40px rgba(0,0,0,0.2);
 text-align:center;
 }
 
-h2{
-margin-bottom:15px;
-}
+h2{margin-bottom:15px;}
 
 .image-box{
 border-radius:12px;
@@ -84,31 +82,39 @@ color:white;
 /* GOOGLE DRIVE FILE ID */
 const fileId="10dhrdvtp8HB68JzLMicyFsRjcJADlY6A";
 
-/* FAST PREVIEW LINK (same as your reference code) */
+/* FAST IMAGE PREVIEW */
 const imageURL=`https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-
-/* Load preview instantly */
 document.getElementById("offerImage").src=imageURL;
+
+/* GOOGLE SCRIPT API */
+const scriptURL="https://script.google.com/macros/s/AKfycbyWk9-Dp72zjaX5syxmaem8rIIyTGy1sX3tSoAldCRDafg4pWZQoO1WV25xRP-F12DY/exec";
 
 /* Get customer number from AppSheet */
 const params=new URLSearchParams(window.location.search);
 const customer=(params.get("cust")||"").replace(/\D/g,'');
 
-/* OFFER MESSAGE */
 
-function sendOffer(){
+/* SEND OFFER (message from sheet) */
 
-const message=`Hello,
+async function sendOffer(){
 
-Latest offers are available at Chavan Automobiles.
+try{
 
-Please contact us for more details.
+const res=await fetch(scriptURL+"?cust="+customer);
+const data=await res.json();
 
-Thank you 😊`;
+const message=data.message || "Offer message unavailable";
 
 openWhatsApp(message);
 
+}catch(e){
+
+alert("Unable to load message");
+
 }
+
+}
+
 
 /* CALLING MESSAGE */
 
@@ -127,6 +133,7 @@ openWhatsApp(message);
 
 }
 
+
 /* MISSED CALL */
 
 function sendMissed(){
@@ -143,6 +150,9 @@ Thank you 😊`;
 openWhatsApp(message);
 
 }
+
+
+/* OPEN WHATSAPP */
 
 function openWhatsApp(text){
 
