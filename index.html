@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WhatsApp CRM Sender</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 
@@ -11,8 +11,8 @@ body{
 font-family:Arial;
 background:#f4f6f9;
 display:flex;
-justify-content:center;
 align-items:center;
+justify-content:center;
 height:100vh;
 margin:0;
 }
@@ -20,26 +20,34 @@ margin:0;
 .container{
 background:white;
 width:95%;
-max-width:500px;
+max-width:450px;
 padding:25px;
-border-radius:12px;
-box-shadow:0 8px 20px rgba(0,0,0,0.1);
+border-radius:15px;
+box-shadow:0 10px 40px rgba(0,0,0,0.2);
 text-align:center;
 }
 
-h2{margin-bottom:15px;}
+h2{
+margin-bottom:15px;
+}
 
-#imagePreview{
+.image-box{
+border-radius:12px;
+overflow:hidden;
+margin-bottom:20px;
+}
+
+.image-box img{
 width:100%;
-border-radius:10px;
-margin:10px 0;
+height:auto;
+display:block;
 }
 
 button{
 width:100%;
-padding:12px;
+padding:14px;
 border:none;
-border-radius:6px;
+border-radius:8px;
 font-size:15px;
 cursor:pointer;
 margin-top:10px;
@@ -59,7 +67,9 @@ color:white;
 
 <h2>WhatsApp CRM Sender</h2>
 
-<img id="imagePreview">
+<div class="image-box">
+<img id="offerImage">
+</div>
 
 <button class="offer" onclick="sendOffer()">Send Offer Message</button>
 
@@ -71,22 +81,28 @@ color:white;
 
 <script>
 
-/* IMAGE PREVIEW */
-const imageURL="https://drive.google.com/uc?export=view&id=10dhrdvtp8HB68JzLMicyFsRjcJADlY6A";
-document.getElementById("imagePreview").src=imageURL;
+/* GOOGLE DRIVE FILE ID */
+const fileId="10dhrdvtp8HB68JzLMicyFsRjcJADlY6A";
+
+/* FAST PREVIEW LINK (same as your reference code) */
+const imageURL=`https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+
+/* Load preview instantly */
+document.getElementById("offerImage").src=imageURL;
 
 /* Get customer number from AppSheet */
 const params=new URLSearchParams(window.location.search);
-const customerNumber=(params.get("cust")||"").replace(/\D/g,'');
+const customer=(params.get("cust")||"").replace(/\D/g,'');
 
-/* Offer message */
+/* OFFER MESSAGE */
+
 function sendOffer(){
 
-const message=`Latest Offer from Chavan Automobiles 🚀
+const message=`Hello,
 
-Exclusive offers are available for Hero two-wheelers.
+Latest offers are available at Chavan Automobiles.
 
-Contact us for more details.
+Please contact us for more details.
 
 Thank you 😊`;
 
@@ -94,7 +110,8 @@ openWhatsApp(message);
 
 }
 
-/* Calling message */
+/* CALLING MESSAGE */
+
 function sendCalling(){
 
 const message=`We are calling you regarding the special offer shared earlier.
@@ -110,7 +127,8 @@ openWhatsApp(message);
 
 }
 
-/* Missed message */
+/* MISSED CALL */
+
 function sendMissed(){
 
 const message=`We tried calling you regarding the special offer but couldn't connect.
@@ -128,9 +146,8 @@ openWhatsApp(message);
 
 function openWhatsApp(text){
 
-const encoded=encodeURIComponent(text);
-const url=`https://wa.me/${customerNumber}?text=${encoded}`;
-window.open(url,"_blank");
+const url=`https://wa.me/${customer}?text=${encodeURIComponent(text)}`;
+window.location.href=url;
 
 }
 
