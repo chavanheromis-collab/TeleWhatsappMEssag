@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,8 +11,8 @@ body{
 font-family:Arial;
 background:#f4f6f9;
 display:flex;
-align-items:center;
 justify-content:center;
+align-items:center;
 height:100vh;
 margin:0;
 }
@@ -27,7 +27,9 @@ box-shadow:0 10px 40px rgba(0,0,0,0.2);
 text-align:center;
 }
 
-h2{margin-bottom:15px;}
+h2{
+margin-bottom:15px;
+}
 
 .image-box{
 border-radius:12px;
@@ -38,7 +40,6 @@ margin-bottom:20px;
 .image-box img{
 width:100%;
 height:auto;
-display:block;
 }
 
 button{
@@ -79,41 +80,60 @@ color:white;
 
 <script>
 
-/* GOOGLE DRIVE FILE ID */
+/* GOOGLE SCRIPT URL */
+const scriptURL="PASTE_YOUR_WEBAPP_URL_HERE";
+
+/* DRIVE IMAGE FILE ID */
 const fileId="10dhrdvtp8HB68JzLMicyFsRjcJADlY6A";
 
 /* FAST IMAGE PREVIEW */
-const imageURL=`https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-document.getElementById("offerImage").src=imageURL;
+document.getElementById("offerImage").src=
+`https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
 
-/* GOOGLE SCRIPT API */
-const scriptURL="https://script.google.com/macros/s/AKfycbyWk9-Dp72zjaX5syxmaem8rIIyTGy1sX3tSoAldCRDafg4pWZQoO1WV25xRP-F12DY/exec";
-
-/* Get customer number from AppSheet */
+/* CUSTOMER NUMBER FROM APPSHEET */
 const params=new URLSearchParams(window.location.search);
 const customer=(params.get("cust")||"").replace(/\D/g,'');
 
 
-/* SEND OFFER (message from sheet) */
+/* SEND OFFER */
 
-async function sendOffer(){
+function sendOffer(){
 
-try{
+fetch(scriptURL)
+.then(res=>res.json())
+.then(data=>{
 
-const res=await fetch(scriptURL+"?cust="+customer);
-const data=await res.json();
+if(!data.message){
+alert("No pending messages");
+return;
+}
 
-const message=data.message || "Offer message unavailable";
+const message=data.message;
+const row=data.row;
 
-openWhatsApp(message);
+const url=`https://wa.me/${customer}?text=${encodeURIComponent(message)}`;
 
-}catch(e){
+window.location.href=url;
 
-alert("Unable to load message");
+/* UPDATE STATUS */
+
+setTimeout(()=>{
+
+fetch(scriptURL,{
+method:"POST",
+body:JSON.stringify({row:row})
+});
+
+},1500);
+
+})
+.catch(err=>{
+console.log(err);
+alert("Failed loading message");
+});
 
 }
 
-}
 
 
 /* CALLING MESSAGE */
@@ -134,7 +154,8 @@ openWhatsApp(message);
 }
 
 
-/* MISSED CALL */
+
+/* MISSED MESSAGE */
 
 function sendMissed(){
 
@@ -152,9 +173,13 @@ openWhatsApp(message);
 }
 
 
-/* OPEN WHATSAPP */
 
 function openWhatsApp(text){
+
+if(!customer){
+alert("Customer number missing");
+return;
+}
 
 const url=`https://wa.me/${customer}?text=${encodeURIComponent(text)}`;
 window.location.href=url;
