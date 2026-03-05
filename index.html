@@ -29,12 +29,6 @@ text-align:center;
 
 h2{margin-bottom:15px;}
 
-#message{
-font-size:15px;
-margin:10px 0;
-min-height:50px;
-}
-
 #imagePreview{
 width:100%;
 border-radius:10px;
@@ -56,14 +50,6 @@ color:white;
 .calling{background:#007bff;}
 .missed{background:#ff5722;}
 
-button:disabled{background:gray;}
-
-.status{
-margin-top:10px;
-font-size:14px;
-color:#555;
-}
-
 </style>
 </head>
 
@@ -75,66 +61,69 @@ color:#555;
 
 <img id="imagePreview">
 
-<div id="message">Loading message...</div>
-
-<button class="offer" onclick="sendOffer()">Send Offer + Image</button>
+<button class="offer" onclick="sendOffer()">Send Offer Message</button>
 
 <button class="calling" onclick="sendCalling()">We Are Calling You</button>
 
 <button class="missed" onclick="sendMissed()">Could Not Connect</button>
 
-<div class="status" id="status"></div>
-
 </div>
 
 <script>
 
-const scriptURL="https://script.google.com/macros/s/AKfycbyWk9-Dp72zjaX5syxmaem8rIIyTGy1sX3tSoAldCRDafg4pWZQoO1WV25xRP-F12DY/exec";
-
-/* PASTE GOOGLE DRIVE FILE ID HERE */
-const driveFileID="10dhrdvtp8HB68JzLMicyFsRjcJADlY6A";
-
-/* Convert to preview */
-const imageURL=`https://drive.google.com/uc?export=view&id=${driveFileID}`;
-
-/* Show preview immediately */
+/* IMAGE PREVIEW */
+const imageURL="https://drive.google.com/uc?export=view&id=10dhrdvtp8HB68JzLMicyFsRjcJADlY6A";
 document.getElementById("imagePreview").src=imageURL;
 
-
-/* Get customer number */
+/* Get customer number from AppSheet */
 const params=new URLSearchParams(window.location.search);
 const customerNumber=(params.get("cust")||"").replace(/\D/g,'');
 
-let sheetMessage="";
+/* Offer message */
+function sendOffer(){
 
-async function loadMessage(){
+const message=`Latest Offer from Chavan Automobiles 🚀
 
-if(!customerNumber){
-document.getElementById("message").innerText="Customer number missing.";
-disableButtons();
-return;
-}
+Exclusive offers are available for Hero two-wheelers.
 
-try{
+Contact us for more details.
 
-const res=await fetch(scriptURL+"?cust="+customerNumber);
-const data=await res.json();
+Thank you 😊`;
 
-sheetMessage=data.message || "Offer message unavailable";
-
-document.getElementById("message").innerText=sheetMessage;
-
-}catch(e){
-
-document.getElementById("message").innerText="Unable to load message.";
-disableButtons();
+openWhatsApp(message);
 
 }
 
+/* Calling message */
+function sendCalling(){
+
+const message=`We are calling you regarding the special offer shared earlier.
+
+Kindly take our call or let us know a suitable time.
+
+आम्ही पाठवलेल्या विशेष ऑफर संदर्भात संपर्क करत आहोत.
+कृपया योग्य वेळ कळवावी.
+
+Thank you 😊`;
+
+openWhatsApp(message);
+
 }
 
-function disableButtons(){
-document.querySelectorAll("button").forEach(b=>b.disabled=true);
+/* Missed message */
+function sendMissed(){
+
+const message=`We tried calling you regarding the special offer but couldn't connect.
+
+Please share a convenient time to call.
+
+विशेष ऑफर संदर्भात संपर्क साधण्याचा प्रयत्न केला परंतु संपर्क होऊ शकला नाही.
+कृपया योग्य वेळ कळवावी.
+
+Thank you 😊`;
+
+openWhatsApp(message);
+
 }
 
 function openWhatsApp(text){
@@ -145,73 +134,7 @@ window.open(url,"_blank");
 
 }
 
-async function markSent(){
-
-try{
-
-await fetch(scriptURL,{
-method:"POST",
-body:JSON.stringify({customer:customerNumber})
-});
-
-document.getElementById("status").innerText="Status Updated";
-
-}catch{
-
-document.getElementById("status").innerText="Update failed";
-
-}
-
-}
-
-/* OFFER */
-function sendOffer(){
-
-const msg=`${sheetMessage}\n\n${imageURL}`;
-
-openWhatsApp(msg);
-markSent();
-
-}
-
-/* CALLING */
-
-function sendCalling(){
-
-const msg=`We are calling you regarding the special offer shared earlier.
-Kindly take our call or let us know a suitable time.
-
-आम्ही पाठवलेल्या विशेष ऑफर संदर्भात संपर्क करत आहोत.
-कृपया योग्य वेळ कळवावी.
-
-Thank you 😊`;
-
-openWhatsApp(msg);
-markSent();
-
-}
-
-/* MISSED */
-
-function sendMissed(){
-
-const msg=`We tried calling you regarding the special offer but couldn't connect.
-Please share a convenient time to call.
-
-विशेष ऑफर संदर्भात संपर्क साधण्याचा प्रयत्न केला परंतु संपर्क होऊ शकला नाही.
-कृपया योग्य वेळ कळवावी.
-
-Thank you 😊`;
-
-openWhatsApp(msg);
-markSent();
-
-}
-
-loadMessage();
-
 </script>
 
 </body>
 </html>
-
